@@ -405,7 +405,15 @@ class FSDPTest(MultiProcessTestCase):
         sys.exit(0)
 
     def _train_for_several_steps(
-        self, model, num_steps, autocast, lr=0.01, fsdp_cpu_offload=None, save_model=False
+        self,
+        model,
+        num_steps,
+        autocast,
+        lr=0.01,
+        fsdp_cpu_offload=None,
+        clip_norm=0.3,
+        norm_type=None,
+        save_model=False,
     ):
         cpu_offload_params = fsdp_cpu_offload and fsdp_cpu_offload.offload_params
 
@@ -432,6 +440,11 @@ class FSDPTest(MultiProcessTestCase):
             ), "loss data type should be float32, as the original \
                  parameter data type is float32."
             model.module.run_backward(loss)
+            if norm_type is not None:
+                if isinstance(model, FullyShardedDataParallel):
+                    model.clip_grad_norm_(clip_norm, norm_type)
+                else:
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), clip_norm, norm_type)
             # Post-backward, if CPU offloading model params should be on CPU.
             if cpu_offload_params and isinstance(model, FullyShardedDataParallel):
                 for p in model.parameters():
@@ -464,6 +477,8 @@ class FSDPTest(MultiProcessTestCase):
         cpu_offload=CPUOffload(),
         backward_prefetch=None,
         save_model=True,
+        clip_norm=0.3,
+        norm_type=None,
         **kwargs
     ):
         group = dist.distributed_c10d._get_default_group()
