@@ -45,6 +45,9 @@ jobs:
 
       - name: build PyTorch Android
         run: |
+          echo ANDROID_SDK_ROOT
+          echo $ANDROID_SDK_ROOT
+          ls "$ANDROID_SDK_ROOT"
           export ANDROID_NDK=/Users/runner/Library/Android/sdk/ndk-bundle
           echo "CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname "$(which conda)")/../"}" >> "${GITHUB_ENV}"
           ./scripts/build_pytorch_android.sh x86
