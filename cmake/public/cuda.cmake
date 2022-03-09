@@ -38,8 +38,8 @@ endif()
 message(STATUS "Caffe2: CUDA detected: " ${CUDA_VERSION})
 message(STATUS "Caffe2: CUDA nvcc is: " ${CUDA_NVCC_EXECUTABLE})
 message(STATUS "Caffe2: CUDA toolkit directory: " ${CUDA_TOOLKIT_ROOT_DIR})
-if(CUDA_VERSION VERSION_LESS 10.2)
-  message(FATAL_ERROR "PyTorch requires CUDA 10.2 or above.")
+if(CUDA_VERSION VERSION_LESS 9.2)
+  message(FATAL_ERROR "PyTorch requires CUDA 9.2 or above.")
 endif()
 
 if(CUDA_FOUND)
@@ -281,15 +281,18 @@ if(CAFFE2_STATIC_LINK_CUDA AND NOT WIN32)
     set_property(
         TARGET caffe2::cublas PROPERTY INTERFACE_LINK_LIBRARIES
         "${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublas_static.a")
-    set_property(
-      TARGET caffe2::cublas APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-      "${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublasLt_static.a")
-    # Add explicit dependency to cudart_static to fix
-    # libcublasLt_static.a.o): undefined reference to symbol 'cudaStreamWaitEvent'
-    # error adding symbols: DSO missing from command line
-    set_property(
-      TARGET caffe2::cublas APPEND PROPERTY INTERFACE_LINK_LIBRARIES
-      "${CUDA_cudart_static_LIBRARY}" rt dl)
+
+    if(CUDA_VERSION VERSION_GREATER_EQUAL 10.1)
+      set_property(
+        TARGET caffe2::cublas APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+        "${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcublasLt_static.a")
+      # Add explicit dependency to cudart_static to fix
+      # libcublasLt_static.a.o): undefined reference to symbol 'cudaStreamWaitEvent'
+      # error adding symbols: DSO missing from command line
+      set_property(
+        TARGET caffe2::cublas APPEND PROPERTY INTERFACE_LINK_LIBRARIES
+        "${CUDA_cudart_static_LIBRARY}" rt dl)
+    endif()
 else()
     set_property(
         TARGET caffe2::cublas PROPERTY INTERFACE_LINK_LIBRARIES
@@ -425,6 +428,21 @@ if(ONNX_NAMESPACE)
   list(APPEND CUDA_NVCC_FLAGS "-DONNX_NAMESPACE=${ONNX_NAMESPACE}")
 else()
   list(APPEND CUDA_NVCC_FLAGS "-DONNX_NAMESPACE=onnx_c2")
+endif()
+
+
+if(CUDA_VERSION VERSION_EQUAL   10.0)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND
+      NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.20 AND
+      NOT DEFINED ENV{CUDAHOSTCXX})
+    message(FATAL_ERROR
+      "CUDA ${CUDA_VERSION} is not compatible with MSVC toolchain version "
+      ">= 19.20. (a.k.a Visual Studio 2019, VS 16.0) "
+      "Please upgrade to CUDA >= 10.1 or set the following environment "
+      "variable to use another version (for example): \n"
+      "  set \"CUDAHOSTCXX=C:\\Program Files (x86)\\Microsoft Visual Studio"
+      "\\2017\\Enterprise\\VC\\Tools\\MSVC\\14.16.27023\\bin\\HostX64\\x64\\cl.exe\"\n")
+  endif()
 endif()
 
 # Don't activate VC env again for Ninja generators with MSVC on Windows if CUDAHOSTCXX is not defined
