@@ -24,8 +24,7 @@ namespace compiler {
 
 torch::lazy::Shape InferRepeat(const ir::ops::Repeat* repeat) {
   const torch::lazy::Output& input = repeat->operand(0);
-  const torch::lazy::Shape& input_shape =
-      torch::lazy::GetShapeFromTsOutput(input);
+  const torch::lazy::Shape& input_shape = input.shape();
   const auto& repeats = repeat->repeats();
   CHECK_GE(repeats.size(), input_shape.dim());
 
@@ -46,10 +45,9 @@ torch::lazy::Shape InferStack(const ir::ops::Stack* stack) {
   auto* tensorlist = torch::lazy::NodeCast<torch::lazy::TensorList>(
           inputs[0].node, torch::lazy::tensor_list_opkind);
   auto operands = tensorlist->operands();
-  const torch::lazy::Shape& input_shape =
-      torch::lazy::GetShapeFromTsOutput(operands[0]);
+  const torch::lazy::Shape& input_shape = operands[0].shape();
   for (const torch::lazy::Output& operand : operands) {
-    CHECK_EQ(torch::lazy::GetShapeFromTsOutput(operand), input_shape);
+    CHECK_EQ(operand.shape(), input_shape);
   }
   const auto input_dimensions = input_shape.sizes();
   std::vector<int64_t> output_dimensions(input_dimensions.begin(),

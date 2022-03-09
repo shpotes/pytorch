@@ -183,8 +183,8 @@ CanonicalIndexInfo GetCanonicalIndexInfo(
 }
 
 torch::lazy::Value EnsureRank1(const torch::lazy::Value& index) {
-  CHECK_LE(torch::lazy::GetShapeFromTsValue(index).dim(), 1);
-  return torch::lazy::GetShapeFromTsValue(index).dim() == 0
+  CHECK_LE(index.shape().dim(), 1);
+  return index.shape().dim() == 0
              ? torch::lazy::MakeNode<torch::lazy::Expand>(
                    index, std::vector<int64_t>{1},
                    /*is_scalar_expand=*/false)
