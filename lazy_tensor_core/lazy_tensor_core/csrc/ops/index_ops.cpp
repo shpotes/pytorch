@@ -3,7 +3,6 @@
 #include <ATen/ExpandUtils.h>
 #include <ATen/Functions.h>
 #include <torch/csrc/lazy/core/helpers.h>
-#include <torch/csrc/lazy/ts_backend/ops/arithmetic_ir_ops.h>
 #include <torch/csrc/lazy/ts_backend/ops/expand.h>
 #include <torch/csrc/lazy/ts_backend/ops/scalar.h>
 #include <torch/csrc/lazy/core/permutation_util.h>
