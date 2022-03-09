@@ -201,6 +201,7 @@ TEST(LiteInterpreterTest, MultipleOps) {
   //               super(Model, self).__init__()
   //               self.ops = torch.nn.Sequential(
   //                   torch.nn.ReLU(),
+  //                   torch.nn.AdaptiveAvgPool2d(output_size=(1, 1)),
   //                   torch.nn.Flatten(),
   //               )
   //           def forward(self, x):
@@ -211,7 +212,7 @@ TEST(LiteInterpreterTest, MultipleOps) {
   auto b = at::ones({2, 2, 2, 2});
   const auto result = bc.forward({b});
 
-  at::Tensor expected = torch::tensor({{1, 1, 1, 1, 1, 1, 1, 1}, {0, 0, 0, 0, 0, 0, 0, 0}}, c10::TensorOptions(c10::ScalarType::Float));
+  at::Tensor expected = torch::tensor({{1, 1}, {0, 0}}, c10::TensorOptions(c10::ScalarType::Float));
   AT_ASSERT(result.toTensor().equal(expected));
 }
 } // namespace mobile
